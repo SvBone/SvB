@@ -1,0 +1,571 @@
+#include <iostream>
+#include <string>
+#include <String.h>
+using namespace std;
+
+const int number_of_clients = 10;
+const int number_of_services = 10;
+const int number_of_sertcs = 10;
+const int number_of_intserv = 10;
+int numcl = 0;
+int numserv = 0;
+int numsertcs = 0;
+struct client
+{
+	char clientname[150];
+	char clientphone[20];
+	//char clientdate1[20];
+	//char clientdate2[20];
+	//char clientdolg[10];
+	//char clientcredit[10];
+};
+
+struct service
+{
+	char servname[50];
+	int servcode;
+};
+
+struct sertc
+{
+	char phone[20];
+	int servcode;
+	char date[20];
+};
+
+struct params
+{
+	char serv1[50];
+	char serv2[50];
+	char date1[20];
+	char date2[20];
+};
+
+client clients[number_of_clients];
+service services[number_of_services];
+sertc sertcs[number_of_sertcs];
+params parametr;
+int intserv[number_of_intserv]={};
+int indexes_of_search_phones_in_sertc_foon[number_of_sertcs] = {};
+
+void information_users(client clients[number_of_clients]);
+void information_services(service services[number_of_services]);
+void information_serv_to_client(sertc sertcs[number_of_sertcs]);
+void param();
+void foon(int dstart, int dend);
+int date_in_int(char a[]);
+void phone_in_name_in_file();
+
+
+int main()
+{
+	// Функция считывания из файла users имени и номера телефона
+	information_users(clients);
+
+
+	// Проверка на корректоность считывания номера и имени.
+	
+	FILE* f1;
+	fopen_s(&f1, "resunames.txt", "w");
+	if (f1 != NULL)
+	{
+		for (int i = 0; i < number_of_clients; i++)
+		{
+			fprintf_s(f1, "%s\t", clients[i].clientname);
+			fprintf_s(f1, "%s\n", clients[i].clientphone);
+		}
+		fclose(f1);
+	}
+	
+
+	//Функция считывания из файла инфы по услугам.
+	information_services(services);
+
+	// Проверка на корректность считывания названия и кода.
+	FILE* f2;
+	fopen_s(&f2, "resservices.txt", "w");
+	if (f2 != NULL)
+	{
+		for (int i = 0; i < number_of_clients; i++)
+		{
+			fprintf_s(f2, "%s\t", services[i].servname);
+			fprintf_s(f2, "%d\n", services[i].servcode);
+		}
+		fclose(f2);
+	}
+
+	// Функция считывания номера телефона, кода услуги и даты предоставления услуги.
+	information_serv_to_client(sertcs);
+
+	// Проверка корректности выполненной операции.
+	FILE* f3;
+	fopen_s(&f3, "ressertcs.txt", "w");
+	if (f3 != NULL)
+	{
+		for (int i = 0; i < number_of_clients; i++)
+		{
+			fprintf_s(f3, "%s\t", sertcs[i].phone);
+			fprintf_s(f3, "%d\t", sertcs[i].servcode);
+			fprintf_s(f3, "%s\n", sertcs[i].date);
+		}
+		fclose(f3);
+	}
+
+	// Функция считывания параметров работы программы.
+	param();
+
+	// Проверка кореркстностии выполненной операции.
+	FILE* f4;
+	fopen_s(&f4, "param_actuall.txt", "w");
+	if (f4 != NULL)
+	{
+		fprintf_s(f4, "%s\n", parametr.serv1);
+		fprintf_s(f4, "%s\n", parametr.serv2);
+		fprintf_s(f4, "%s\n", parametr.date1);
+		fprintf_s(f4, "%s\n", parametr.date2);
+		fclose(f4);
+	}
+
+	// Функция:
+	// Поиск кода по названию из параметра														+
+	// Поиск по массиву структур элементов, которые юзали эти услуги							+
+	// Перевод даты из строки в число и сравнение с указанной в параметре (СЛОЖНО)				+
+	// Если даты принадлежат промежутку вытаскиваю номер из структуры							+
+	// Сопоставить номер и полное имя.
+	// Запись в файл имени. (ВОЗМОЖЕН ЕЩЕ И НОМЕР)
+	
+	printf_s(parametr.date1);
+	int datestart = date_in_int(parametr.date1);
+	int dateend = date_in_int(parametr.date2);
+	foon(datestart, dateend);
+	/*for (int i = 0; i < number_of_sertcs; i++)
+	{
+		cout << endl << indexes_of_search_phones_in_sertc_foon[i] << endl;
+	}*/
+	phone_in_name_in_file();
+}
+
+void phone_in_name_in_file()
+{
+	// если номер телефона по индексу совпадает с телефоном из списка, индекс перезаписывается на номер структуры из 
+	// массива структур, псле чего по этим индекса производится запись в файл с результатами.
+	// strcmp
+	
+	for (int i = 0; i < number_of_sertcs; i++)
+	{
+		if (indexes_of_search_phones_in_sertc_foon[i] == 0)indexes_of_search_phones_in_sertc_foon[i] = -100;
+		if(indexes_of_search_phones_in_sertc_foon[i] == -1)indexes_of_search_phones_in_sertc_foon[i] = 0;
+	}
+	int c = 0;
+	for (int i = 0; i < number_of_sertcs; i++)
+	{
+		for (int j = 0; j < number_of_clients; j++)
+		{
+			if (indexes_of_search_phones_in_sertc_foon[c] != -100)
+			{
+				int po = indexes_of_search_phones_in_sertc_foon[c];
+				cout << sertcs[po].phone << '\t' << clients[j].clientphone << '\t' << clients[i].clientname << endl;
+				bool k = strcmp(sertcs[po].phone, clients[j].clientphone) == 0;
+				if (k == 1)
+				{
+					cout << sertcs[po].phone << '\t' << clients[j].clientphone << '\t' << clients[j].clientname << endl;
+					indexes_of_search_phones_in_sertc_foon[c] = j;
+					c++;
+					cout << "\t\t\tSOVPADENIE!\n";
+				}
+			}
+		}
+	}
+	
+	FILE* file;
+	fopen_s(&file, "Report.txt", "w");
+	if (file != NULL)
+	{
+		int i = 0;
+		while (indexes_of_search_phones_in_sertc_foon[i] != -100)
+		{
+			int po = indexes_of_search_phones_in_sertc_foon[i];
+			fprintf(file, "%s\n", clients[po].clientname);
+			i++;
+		}
+		fclose(file);
+	}
+	
+}
+
+
+int date_in_int(char a[])
+{
+	int i = 0;
+	int schetchik = 0;
+	int nol = 0;
+	int res = 0;
+	bool k = true;
+	char chi1[10];
+	while (k) {
+		while (a[i] != '.' && a[i] != '\0')
+		{
+			chi1[nol] = a[i];
+			nol++;
+			i++;
+		}
+		chi1[nol] = '\0';
+		i++;
+		nol = 0;
+		if (schetchik == 0)
+		{
+			res += atoi(chi1);
+		}
+		if (schetchik == 1)
+		{
+			res += ((atoi(chi1)) * 30);
+		}
+		if (schetchik == 2)
+		{
+			res += ((atoi(chi1)) * 365);
+			k = false;
+		}
+		schetchik++;
+	}
+	return res;
+}
+
+void foon(int dstart, int dend)
+{
+	//cout << endl << dstart << "\n" << dend << endl;
+	for (int i = 0, k = 0; i < number_of_services; i++)
+	{
+		if (strcmp(services[i].servname,parametr.serv1) == 0 || strcmp(services[i].servname, parametr.serv2) == 0)
+		{
+			//cout << i << "\tElement of massive\tNumber of Service:" << services[i].servcode << endl;
+			intserv[k] = services[i].servcode;
+			k++;
+		}
+	}
+	for (int i = 0, c = 0; i < number_of_intserv; i++)
+	{
+		for (int j = 0; j < number_of_sertcs; j++)
+		{
+			if (intserv[i] == sertcs[j].servcode)
+			{
+				//cout << sertcs[j].phone << '\t' << sertcs[j].date << '\t' << sertcs[j].servcode << endl;
+				int  d1 = date_in_int(sertcs[j].date);
+				cout << dstart << '\t' << d1 << '\t' << dend << endl;
+				if (date_in_int(sertcs[j].date) >= dstart && date_in_int(sertcs[j].date) <= dend)
+				{
+					cout << sertcs[j].phone << '\t' << "TO, CHTO ISKAL!!!\t"<< j << endl;
+					if(j == 0)indexes_of_search_phones_in_sertc_foon[c] = -1;
+					else indexes_of_search_phones_in_sertc_foon[c] = j;
+					c++;
+				}
+			}
+		}
+	}
+}
+
+//void foon(int datestart, int dateend)
+//{
+	/*for (int i = 0, k = 0; i < number_of_services; i++)
+	{
+		if (strcmp(services[i].servname,parametr.serv1) == 0 || strcmp(services[i].servname, parametr.serv2) == 0)
+		{
+			cout << i << "\tElement of massive\tNumber of Service:" << services[i].servcode << endl;
+			intserv[k] = services[i].servcode;
+			k++;
+		}
+	}*/
+/*
+	
+
+	for (int i = 0; i < number_of_intserv; i++)
+	{
+		for (int j = 0; j < number_of_sertcs; j++)
+		{
+			if (intserv[i] == sertcs[j].servcode)
+			{
+				cout << sertcs[j].phone << '\t' << sertcs[j].date << '\t' << sertcs[j].servcode << endl;
+				int  d1 = date_in_int(sertcs[j].date);
+				cout << datestart<< '\t' << d1 <<  '\t'<< dateend<< endl;
+				if (date_in_int(sertcs[j].date) >= datestart && date_in_int(sertcs[j].date) <= dateend)
+				{
+					cout << sertcs[j].phone << '\t' << "TO, CHTO ISKAL!!!" << endl;
+				}
+			}
+		}
+	}
+	*/	
+//}
+
+
+
+
+void param()
+{
+	FILE* file;
+	fopen_s(&file, "param.ini", "r");
+	if(file != NULL)
+	{
+		params p;
+		int s = 0;
+		
+		while (!feof(file))
+		{
+			char temp[50];
+			fgets(temp, 50, file);
+			if (s == 0)
+			{
+				int i = 0;
+				int nol = 0;
+				bool k = true;
+				while (k)
+				{
+					if (temp[i] == '\n')
+					{
+						k = false;
+						parametr.serv1[i] = '\0';
+					}
+					else
+					{
+						parametr.serv1[i] = temp[i];
+						i++;
+					}
+				}
+				
+			}
+			if (s == 1)
+			{
+				int i = 0;
+				int nol = 0;
+				bool k = true;
+				while (k)
+				{
+					if (temp[i] == '\n')
+					{
+						k = false;
+						parametr.serv2[i] = '\0';
+					}
+					else
+					{
+						parametr.serv2[i] = temp[i];
+						i++;
+					}
+				}
+				
+			}
+			if (s == 2)
+			{
+				int i = 0;
+				int nol = 0;
+				bool k = true;
+				while (k)
+				{
+					if (temp[i] == '\n')
+					{
+						k = false;
+						parametr.date1[i] = '\0';
+					}
+					else
+					{
+						parametr.date1[i] = temp[i];
+						i++;
+					}
+				}
+				
+			}
+			if (s == 3)
+			{
+				int i = 0;
+				int nol = 0;
+				bool k = true;
+				while (k)
+				{
+					if (temp[i] == '\n')
+					{
+						k = false;
+						parametr.date2[i] = '\0';
+					}
+					else
+					{
+						parametr.date2[i] = temp[i];
+						i++;
+					}
+				}
+				
+			}
+			s++;
+			
+		}
+		fclose(file);
+		//fclose(file);
+		//parametr = p;
+	}
+}
+
+
+
+void information_serv_to_client(sertc sertcs[number_of_sertcs])
+{
+	FILE* file;
+	fopen_s(&file, "sptc.txt", "r");
+
+	if (file != NULL)
+	{
+		while (!feof(file))
+		{
+			sertc newSertc;
+			char temp[150];
+			fgets(temp, 150, file);
+
+			int i = 0;
+			int nol = 0; 
+			while (temp[i] != ',')
+			{
+				newSertc.phone[nol] = temp[i];
+				i++;
+				nol++;
+			}
+			newSertc.phone[nol] = '\0';
+			i++;
+			nol = 0;
+			char num[5];
+			while (temp[i] != ',')
+			{
+				num[nol] = temp[i];
+				nol++;
+				i++;
+			}
+			num[nol] = '\0';
+			nol = 0;
+			i+=2;
+			newSertc.servcode = atoi(num);
+
+			while (temp[i] != ' ')
+			{
+				newSertc.date[nol] = temp[i];
+				nol++;
+				i++;
+			}
+			newSertc.date[nol] = '\0';
+			sertcs[numsertcs] = newSertc;
+			numsertcs++;
+
+		}
+		fclose(file);
+	}
+}
+
+
+void information_services(service services[number_of_services])
+{
+	FILE* myf;
+	fopen_s(&myf, "services.txt", "r");
+
+	if (myf != NULL)
+	{
+		while (!feof(myf))
+		{
+			cout << "MYFFE\n";
+			service newServ;
+			char temp[150];
+			char num[5];
+			fgets(temp, 150, myf);
+
+			int i = 0;
+			int nol = 0;
+			while (temp[i] != ',')
+			{
+				newServ.servname[nol] = temp[i];
+				i++;
+				nol++;
+			}
+			cout << "Servname\n";
+			newServ.servname[nol] = '\0';
+			nol = 0;
+			i++;
+			while (temp[i] != ',')
+			{
+				num[nol] = temp[i];
+				i++;
+				nol++;
+			}
+			num[nol] = '\0';
+			newServ.servcode = atoi(num);
+			cout << newServ.servcode<<"   Servcode\n";
+			services[numserv] = newServ;
+			numserv++;
+		}
+		fclose(myf);
+	}
+	
+}
+
+
+
+
+void information_users(client clients[number_of_clients])
+{
+	cout << "On information_users" << endl;
+	FILE* f;
+	fopen_s(&f, "clients.txt", "r");
+    
+	if (f!=NULL)
+	{
+		
+		while (!feof(f))
+		{
+			client newClient;
+			char temp[150];
+
+			fgets(temp, 100, f);
+
+			//char name [100];
+			
+			//char number[20];
+			//bool k = true;
+			int i = 0;
+			int nol = 0;
+			
+			while (temp[i] != ',')
+			{
+				newClient.clientname[nol] = temp[i];
+				//name[nol] = temp[i];
+				nol++;
+				i++;
+			}
+			newClient.clientname[nol] = '\0';
+			//name[nol] = '\0';
+			nol = 0;
+			i+=2;
+
+
+			while (temp[i] != ',')
+			{
+				newClient.clientphone[nol] = temp[i];
+				//number[nol] = temp[i];
+				nol++;
+				i++;
+			}
+			newClient.clientphone[nol] = '\0';
+			//number[nol] = '\0';
+			nol = 0;
+			i++;
+			//k = false;
+			//newClient = {*name, *number};
+			printf_s(newClient.clientname);
+			printf_s("\n");
+			printf_s(newClient.clientphone);
+			printf_s("\n");
+			clients[numcl] = newClient;
+			numcl++;
+
+			//printf_s(temp);
+			
+			//delete[] name;
+			//delete[] number;
+			/*delete newClient.clientname;
+			delete newClient.clientphone;*/
+			
+		}
+		fclose(f);
+	}
+}
