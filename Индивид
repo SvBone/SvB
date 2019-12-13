@@ -176,19 +176,33 @@ void phone_in_name_in_file()
 			}
 		}
 	}
-	
+	int proverka_na_args = 0;
+	for (int i = 0; i < number_of_sertcs; i++)
+	{
+		if (indexes_of_search_phones_in_sertc_foon[i] == -100)proverka_na_args++;
+	}
+	cout << endl<< proverka_na_args << endl;
+	bool proverochnaya = proverka_na_args == number_of_sertcs;
 	FILE* file;
 	fopen_s(&file, "Report.txt", "w");
 	if (file != NULL)
 	{
 		int i = 0;
-		while (indexes_of_search_phones_in_sertc_foon[i] != -100)
+		if (!proverochnaya)
 		{
-			int po = indexes_of_search_phones_in_sertc_foon[i];
-			fprintf(file, "%s\n", clients[po].clientname);
-			i++;
+			while (indexes_of_search_phones_in_sertc_foon[i] != -100)
+			{
+				int po = indexes_of_search_phones_in_sertc_foon[i];
+				fprintf(file, "%s\n", clients[po].clientname);
+				i++;
+			}
+			fclose(file);
 		}
-		fclose(file);
+		else
+		{
+			fprintf(file, "NO DATA");
+		}
+		
 	}
 	
 }
